@@ -1,23 +1,18 @@
 rm(list = ls())
 
-library("XML")
-library("plyr")
 library("dplyr")
-library("httr")
-library("reshape2")
 library("gdata")
 
 source("00_Functions.R")
 
 url <- "https://www.boardgamegeek.com"
 
-# read name mapping
+# read nick mapping
 fnm.nick <- "input/Nick Mapping.csv"
-nick.map <- read.csv2(fnm.nick, check.names = FALSE, stringsAsFactors = FALSE)
+nick.map <- read.csv(fnm.nick, check.names = FALSE, stringsAsFactors = FALSE)
+nicks <- nick.map[, "ownernickname"]
 
 collections <- NULL
-
-nicks <- nick.map[, "ownernickname"]
 for (i in nicks){
   # board games
   path <- paste0("xmlapi2/collection?username=", i,
@@ -47,7 +42,5 @@ for (i in nicks){
   collections <- rbind(collections, df.collection)
 }
 
-fnm.coll <- "input/collections.csv"
-write.csv2(collections, fnm.coll, row.names = FALSE)
-
-
+fnm.coll <- "input/Collections.csv"
+write.csv(collections, fnm.coll, row.names = FALSE)
