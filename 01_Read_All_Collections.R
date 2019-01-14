@@ -1,7 +1,9 @@
-rm(list = ls())
+# This file is for getting user collections and separating games from expansions
 
 library("dplyr")
 library("gdata")
+require("httr")
+require("XML")
 
 source("00_Functions.R")
 

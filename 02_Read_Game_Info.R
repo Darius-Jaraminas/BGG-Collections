@@ -1,88 +1,61 @@
-rm(list = ls())
+# This file is for gettinh all data for ech game and formating output nicely
 
-library("XML")
-library("plyr")
 library("dplyr")
-library("httr")
-library("reshape2")
-library("gdata")
+library("tidyr")
+require("httr")
+require("XML")
 
 source("00_Functions.R")
 url <- "https://www.boardgamegeek.com"
 
-fnm.collections <- "input/collections.csv"
-collections <- read.csv2(fnm.collections, check.names = FALSE, stringsAsFactors = FALSE)
+# read collections
+fnm.collections <- "input/Collections.csv"
+collections <- read.csv(fnm.collections, check.names = FALSE, stringsAsFactors = FALSE)
 collections <- collections[collections[, "own"] == 1, ]
-all.games <- list()
+# read manual max player adjustments
+fnm.adj <- paste0("input/Max Player Adjustment.csv")
+adj <- read.csv(fnm.adj, check.names = FALSE, stringsAsFactors = FALSE)
+# read meta file for columns names and order
+fnm.meta <- "input/Meta.csv"
+meta <- read.csv(fnm.meta, check.names = FALSE, stringsAsFactors = FALSE)
 
-for (i in 1:nrow(collections)){
-  Sys.sleep(1)
-  id <- as.numeric(collections[i, "id"])
-  path <- paste0("xmlapi2/thing?id=", id, "&stats=1")
-  game <- CallBGGAPI(url = url, path = path)
-  game <- ProcessGame(l = game)
-  game <- SummarisePolls(l = game)
-  game <- cbind(game$info, game$statistics, game$polls.summary)
-  cat(i, ":", game[, "name"], "\n")
-  all.games[[i]] <- game
+all.games <- list()
+nicks <- unique(collections[, "ownernickname"])
+
+# pull all games data for each nickname
+for (i in 1:length(nicks)){
+  cat(i, ":", nicks[i], "\n")
+  id <- as.numeric(collections[collections[, "ownernickname"] == nicks[i], "id"])
+  path <- paste0("xmlapi2/thing?id=", paste0(id, collapse = ","), "&stats=1")
+  games <- CallBGGAPI(url = url, path = path)
+  games <- games[names(games) %in% "item"]
+  games <- lapply(games, ProcessGame)
+  games <- lapply(games, SummarisePolls)
+  games <- lapply(games, GatherGameInfo)
+  all.games[[i]] <- bind_rows(games)
+  Sys.sleep(10)
 }
 all.games <- bind_rows(all.games)
 
-columns.drop <- c("thumbnail", "image", "description", "median")
-all.games <- remove.vars(all.games, columns.drop, info = FALSE)
-
+# add owner nick names
 collections[, "own"] <- NULL
-all.games2 <- merge(collections, all.games, all.y = TRUE, by = "id")
+all.games[, "id"] <- as.numeric(all.games[, "id"])
+all.games2 <- left_join(collections, all.games, by = "id")
 
-fnm.nick <- "input/Nick Mapping.csv"
-nick.map <- read.csv2(fnm.nick, check.names = FALSE, stringsAsFactors = FALSE)
-all.games2 <- merge(nick.map, all.games2, all.x = TRUE)
-
-nm.from <- c("ownernickname", "ownername", "id", "itemtype", "yearpublished",
-             "minplayers", "maxplayers", "playingtime", "minplaytime",
-             "maxplaytime", "minage", "name", "usersrated", "average", "bayesaverage",
-             "stddev", "owned", "trading", "wanting", "wishing", "numcomments",
-             "numweights", "averageweight", "best.numplayers.community",
-             "recommended.numplayers.community", "min.age.community",
-             "average.min.age.community", "language.community")
-nm.to <- c("Owner Nickname", "Owner Name", "Game ID", "Item Type", "Year Published",
-           "Min Players", "Max Players", "Playing Time", "Min Play Time",
-           "Max Play Time", "Min Age", "Game Name", "Users Rated", "Average Rating",
-           "Bayes Average Rating", "Standard Deviation", "Users Own", "Users Trading",
-           "Users Wanting", "Users Wishing", "Number of Comments",
-           "Number of Complexity Weights", "Average Complexity Weight",
-           "Community - Best Number of Players",
-           "Community - Recommended Number of Players", "Community - Min Age",
-           "Community - Average Min Age", "Community - Language Dependency")
-all.games2 <- rename.vars(all.games2, nm.from, nm.to, info = FALSE)
-
-# adjust max player count
-fnm.adj <- paste0("input/Max Player Adjustment.csv")
-adj <- read.csv(fnm.adj, check.names = FALSE, stringsAsFactors = FALSE)
+# manually adjust max player count
 all.games2 <- AdjustPlayerCount(dt = all.games2, adj = adj)
 
 # add short long column
-all.games2[, "Game Length"] <- "Short"
-all.games2[as.numeric(all.games2[, "Playing Time"]) >= 90, "Game Length"] <- "Long"
+all.games2[, "gamelength"] <- "Short"
+all.games2[as.numeric(all.games2[, "playingtime"]) >= 90, "gamelength"] <- "Long"
 
+# rename variables, keep only output variables and order variables
+all.games3 <- MetaPrep(all.games2, meta = meta)
 
-name.order <- c("Owner Name", "Owner Nickname", "Game Name","Item Type", "Game Length",
-                "Community - Best Number of Players",
-                "Community - Recommended Number of Players",
-                "Min Players", "Max Players",
-                "Playing Time", "Min Play Time", "Max Play Time",
-                "Min Age", "Community - Min Age", "Community - Average Min Age",
-                "Average Complexity Weight", "Number of Complexity Weights",
-                "Year Published", "Board Game Rank", "Average Rating",
-                "Bayes Average Rating", "Users Rated",
-                # "Rating Standard Deviation",
-                "Users Own", "Users Trading",
-                "Users Wanting", "Users Wishing", "Number of Comments",
-                "Community - Language Dependency")
-nm.rank <- grep("Rank", colnames(all.games2), value = TRUE)
-nm.rank <- setdiff(nm.rank, "Board Game Rank")
-nm.rating <- gsub("Rank", "Bayes Average", nm.rank)
-all.games3 <- all.games2[, c(name.order)]
-
-fnm.out <- "output/All Board Games (ze team).csv"
+# check output dir
+if (!dir.exists("output")){
+  dir.create("output")
+}
+# write output data
+fnm.out <- "output/All Board Games.csv"
 write.csv(all.games3, fnm.out, row.names = FALSE)

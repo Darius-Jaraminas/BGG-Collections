@@ -1,0 +1,51 @@
+raw.name,nice.name,keep.for.output,output.order
+ownernickname,Owner Nickname,TRUE,1
+gamelength,Game Length,TRUE,4
+itemtype,Item Type,TRUE,3
+thumbnail,Thumbnail Link,FALSE,0
+image,Image Link,FALSE,0
+description,Description,FALSE,0
+yearpublished,Year Published,TRUE,16
+minplayers,Min Players,TRUE,7
+maxplayers,Max Players,TRUE,8
+playingtime,Playing Time,TRUE,9
+minplaytime,Min Play Time,TRUE,10
+maxplaytime,Max Play Time,TRUE,11
+minage,Min Age,TRUE,12
+name,Game Name,TRUE,2
+id,Game ID,FALSE,0
+usersrated,Users Rated,TRUE,20
+average,Average Rating,TRUE,18
+bayesaverage,Bayes Average Rating,TRUE,19
+stddev,Standard Deviation,FALSE,0
+median,Median,FALSE,0
+owned,Users Own,TRUE,21
+trading,Users Trading,TRUE,22
+wanting,Users Wanting,TRUE,23
+wishing,Users Wishing,TRUE,24
+numcomments,Number of Comments,TRUE,25
+numweights,Number of Complexity Weights,TRUE,15
+averageweight,Average Complexity Weight,TRUE,14
+Board Game Rank,Board Game Rank,TRUE,17
+Family Game Rank,Family Game Rank,FALSE,0
+Board Game Bayes Average,Board Game Bayes Average,FALSE,0
+Family Game Bayes Average,Family Game Bayes Average,FALSE,0
+best.numplayers.community,Community - Best Number of Players,TRUE,5
+recommended.numplayers.community,Community - Recommended Number of Players,TRUE,6
+min.age.community,Community - Min Age,TRUE,13
+average.min.age.community,Community - Average Min Age,FALSE,0
+language.community,Community - Language Dependency,TRUE,26
+Strategy Game Rank,Strategy Game Rank,FALSE,0
+Strategy Game Bayes Average,Strategy Game Bayes Average,FALSE,0
+Thematic Rank,Thematic Rank,FALSE,0
+Thematic Bayes Average,Thematic Bayes Average,FALSE,0
+Party Game Rank,Party Game Rank,FALSE,0
+Party Game Bayes Average,Party Game Bayes Average,FALSE,0
+Abstract Game Rank,Abstract Game Rank,FALSE,0
+Abstract Game Bayes Average,Abstract Game Bayes Average,FALSE,0
+Customizable Rank,Customizable Rank,FALSE,0
+Customizable Bayes Average,Customizable Bayes Average,FALSE,0
+Children's Game Rank,Children's Game Rank,FALSE,0
+Children's Game Bayes Average,Children's Game Bayes Average,FALSE,0
+War Game Rank,War Game Rank,FALSE,0
+War Game Bayes Average,War Game Bayes Average,FALSE,0

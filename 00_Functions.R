@@ -9,8 +9,6 @@ CastRanks <- function(collection, nm.ranks){
 }
 
 CallBGGAPI <- function(url, path){
-  require("httr")
-  require("XML")
   api.result <- GET(url = url, path = path)
   if (api.result$status_code == 202){
     Sys.sleep(10)
@@ -48,36 +46,36 @@ CollectionListToDF <- function(l){
 
 ProcessGame <- function(l, drop = c("names", "links")){
   # put links in to nice data frame
-  link <- lapply(l$item[names(l$item) == "link"], function(x){
+  link <- lapply(l[names(l) == "link"], function(x){
     data.frame(t(x), stringsAsFactors = FALSE)
   })
   link <- bind_rows(link)
-  l$item[names(l$item) == "link"] <- NULL
-  l$item$link <- link
+  l[names(l) == "link"] <- NULL
+  l$link <- link
   if ("links" %in% drop){
-    l$item$link <- NULL
+    l$link <- NULL
     # message("links have been droped!")
   }
   # put names in to nice data frame
-  name <- lapply(l$item[names(l$item) == "name"], function(x){
+  name <- lapply(l[names(l) == "name"], function(x){
     data.frame(t(x), stringsAsFactors = FALSE)
   })
   name <- bind_rows(name)
-  l$item[names(l$item) == "name"] <- NULL
-  l$item$name <- name
+  l[names(l) == "name"] <- NULL
+  l$name <- name
   if ("names" %in% drop){
-    if (!"value" %in% colnames(l$item$name)){
+    if (!"value" %in% colnames(l$name)){
       browser()
     }
-    l$item$name <- l$item$name[l$item$name[, "type"] == "primary", "value"]
+    l$name <- l$name[l$name[, "type"] == "primary", "value"]
     # message("names have been droped!")
   }
   # put polls in to nice data frame
   polls <- list()
-  w.polls <- which(names(l$item) == "poll")
+  w.polls <- which(names(l) == "poll")
   
   for (i in w.polls){
-    poll.i <- l$item[[i]]
+    poll.i <- l[[i]]
     # exception for number of players as the poll is of different format
     is.nr.of.players <- poll.i[[".attrs"]]["title"] == "User Suggested Number of Players"
     if (is.nr.of.players){
@@ -88,7 +86,7 @@ ProcessGame <- function(l, drop = c("names", "links")){
       } 
       poll.df <- bind_rows(poll.df)
       # more compact form
-      poll.df <- dcast(poll.df, numplayers ~ values, value.var = "numvotes")
+      poll.df <- spread(poll.df, values, numvotes)
       
       zero.votes <- poll.i[[".attrs"]]["totalvotes"] == 0
       if (!zero.votes){
@@ -103,13 +101,13 @@ ProcessGame <- function(l, drop = c("names", "links")){
       }
     }
   }
-  l$item[names(l$item) == "poll"] <- NULL
-  l$item$polls <- polls
+  l[names(l) == "poll"] <- NULL
+  l$polls <- polls
   # write id in to atomic vector
-  l$item$id <- l$item[[".attrs"]]["id"]
-  l$item$.attrs <- NULL
+  l$id <- l[[".attrs"]]["id"]
+  l$.attrs <- NULL
   # get rid of unnecessary list within list
-  l <- l$item
+  # l <- l
   # pull together all atmoic values
   atomic <- unlist(lapply(l, is.atomic))
   atomic.df <- data.frame(l[atomic], check.names = FALSE, stringsAsFactors = FALSE)
@@ -269,8 +267,21 @@ AdjustPlayerCount <- function(dt, adj){
   for (i in 1:nrow(adj)){
     nm <- adj[i, "Name"]
     new.count <- adj[i, "Max Players"]
-    dt[dt[, "Game Name"] == nm, "Max Players"] <- new.count
+    dt[dt[, "name"] == nm, "maxplayers"] <- new.count
   }
+  return(dt)
+}
+
+GatherGameInfo <- function(x){
+  cbind(x$info, x$statistics, x$polls.summary)
+}
+
+MetaPrep <- function(dt, meta){
+  meta <- meta[meta$keep.for.output, ]
+  meta <- meta[order(meta$output.order), ]
+  nm.keep <- meta[, "raw.name"]
+  dt <- dt[, nm.keep]
+  colnames(dt) <- meta$nice.name
   return(dt)
 }
 
