@@ -1,4 +1,4 @@
-# This file is for gettinh all data for ech game and formating output nicely
+# This file is for getting all data for each game and formating output nicely
 
 library("dplyr")
 library("tidyr")
