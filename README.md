@@ -13,12 +13,24 @@ So to run this smoothly you will need both [R](https://www.r-project.org/) and [
 
 ## Usage
 
+#### Inputs
+
+All inputs are stored in `input` folder. There are 3 inputs:
+
+1. `Nick Mapping.csv` - list of nicknames
+2. `Max Player Adjustment.csv` - manual adjustment of max player count due to expansions
+3. `Meta.csv` - meta file for changing variable names, ordering variables and dropping unnecessary variables
+
+#### Ouput
+
+Final data is written `output` folder.
+
+#### Running code
+
 1. Lauch [RStudio](https://www.rstudio.com/)
 2. Go to File -> Open Project -> select `BGG-Collections.Rproj`
-2. Source `01_Read_All_Collections.R`
-3. Source `02_Read_Game_Info.R`
-
-At the moment output file  is being written into `output` folder, which you will need to create in the project folder.
+3. Source `01_Read_All_Collections.R`
+4. Source `02_Read_Game_Info.R`
 
 ## Contributing
 
